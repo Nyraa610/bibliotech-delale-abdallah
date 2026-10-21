@@ -2,10 +2,10 @@
 # gestion de la bibliotheque municipale
 # auteur : stagiaire 2019, modifie par plusieurs personnes depuis
 
-import os, sys
 import datetime
-from datetime import *
-import json
+import os
+import sys
+from datetime import date, timedelta
 
 DATA = os.environ.get("BIBLIOTECH_DATA", "data")
 TODAY = None
@@ -108,7 +108,7 @@ class Library:
                     late = False
                     for x in self.l:
                         if x["member"] == mid and x["returned"] == "":
-                            if datetime.strptime(x["due"], "%Y-%m-%d").date() < get_today():
+                            if datetime.datetime.strptime(x["due"], "%Y-%m-%d").date() < get_today():
                                 late = True
                     if late == False:
                         # verif nombre max
@@ -179,7 +179,7 @@ class Library:
         bk = self.find("b", ln["book"])
         mb = self.find("m", ln["member"])
         t = get_today()
-        d = (t - datetime.strptime(ln["due"], "%Y-%m-%d").date()).days
+        d = (t - datetime.datetime.strptime(ln["due"], "%Y-%m-%d").date()).days
         if d > 0:
             if bk["kind"] == "book":
                 f = d * 0.5
@@ -209,7 +209,7 @@ class Library:
         tmp = []
         for x in self.l:
             if x["returned"] == "":
-                if datetime.strptime(x["due"], "%Y-%m-%d").date() < get_today():
+                if datetime.datetime.strptime(x["due"], "%Y-%m-%d").date() < get_today():
                     tmp.append(x)
         if len(tmp) == 0:
             print("Aucun retard.")
@@ -219,7 +219,7 @@ class Library:
         for x in tmp:
             book = self.find("b", x["book"])
             member = self.find("m", x["member"])
-            nbj = (get_today() - datetime.strptime(x["due"], "%Y-%m-%d").date()).days
+            nbj = (get_today() - datetime.datetime.strptime(x["due"], "%Y-%m-%d").date()).days
             # calcul penalite
             if nbj > 0:
                 if book["kind"] == "book":
@@ -265,7 +265,7 @@ class Library:
         for x in self.l:
             if x["returned"] == "":
                 en_cours = en_cours + 1
-                due = datetime.strptime(x["due"], "%Y-%m-%d").date()
+                due = datetime.datetime.strptime(x["due"], "%Y-%m-%d").date()
                 if due < get_today():
                     en_retard = en_retard + 1
                     bk = self.find("b", x["book"])
@@ -328,10 +328,10 @@ class Library:
             bk = self.find("b", x["book"])
             mb = self.find("m", x["member"])
             if x["returned"] != "":
-                end = datetime.strptime(x["returned"], "%Y-%m-%d").date()
+                end = datetime.datetime.strptime(x["returned"], "%Y-%m-%d").date()
             else:
                 end = get_today()
-            dl = (end - datetime.strptime(x["due"], "%Y-%m-%d").date()).days
+            dl = (end - datetime.datetime.strptime(x["due"], "%Y-%m-%d").date()).days
             if dl > 0:
                 if bk["kind"] == "book":
                     fee = dl * 0.5
@@ -434,9 +434,10 @@ if __name__ == "__main__":
     a = sys.argv[1:]
     if "--today" in a:
         i = a.index("--today")
-        TODAY = datetime.strptime(a[i + 1], "%Y-%m-%d").date()
+        TODAY = datetime.datetime.strptime(a[i + 1], "%Y-%m-%d").date()
         a = a[:i] + a[i + 2:]
     if "--debug" in a:
         debug = True
         a.remove("--debug")
     sys.exit(process(a))
+
