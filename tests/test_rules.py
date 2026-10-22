@@ -18,3 +18,14 @@ from bibliotech import late_fee
 )
 def test_late_fee(days_late, kind, member_type, price, expected):
     assert late_fee(days_late, kind, member_type, price) == pytest.approx(expected)
+from datetime import date
+from bibliotech import parse_date
+
+
+def test_parse_date_valid():
+    assert parse_date("2026-10-21") == date(2026, 10, 21)
+
+
+def test_parse_date_invalid():
+    with pytest.raises(ValueError):
+        parse_date("2026-13-01")

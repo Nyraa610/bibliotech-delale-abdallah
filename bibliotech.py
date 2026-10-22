@@ -36,6 +36,11 @@ def late_fee(days_late: int, kind: str, member_type: str, price: float) -> float
     return round(min(fee, price), 2)
 
 
+def parse_date(text: str) -> date:
+    """Convertit une chaîne AAAA-MM-JJ en objet date."""
+    return datetime.strptime(text, "%Y-%m-%d").date()
+
+
 class Library:
 
     def __init__(self):
@@ -124,7 +129,7 @@ class Library:
         today = get_today()
         for x in self.l:
             if x["member"] == member_id and x["returned"] == "":
-                if datetime.strptime(x["due"], "%Y-%m-%d").date() < today:
+                if parse_date(x["due"]) < today:
                     return True
         return False
 
@@ -199,7 +204,7 @@ class Library:
         bk = self.find("b", ln["book"])
         mb = self.find("m", ln["member"])
         t = get_today()
-        due_date = datetime.strptime(ln["due"], "%Y-%m-%d").date()
+        due_date = parse_date(ln["due"])
         days_late = max(0, (t - due_date).days)
         fee = late_fee(days_late, bk["kind"], mb["type"], bk["price"])
 
@@ -213,7 +218,7 @@ class Library:
         tmp = []
         for x in self.l:
             if x["returned"] == "":
-                if datetime.strptime(x["due"], "%Y-%m-%d").date() < get_today():
+                if parse_date(x["due"]) < get_today():
                     tmp.append(x)
         if len(tmp) == 0:
             print("Aucun retard.")
@@ -223,7 +228,7 @@ class Library:
         for x in tmp:
             book = self.find("b", x["book"])
             member = self.find("m", x["member"])
-            nbj = (get_today() - datetime.strptime(x["due"], "%Y-%m-%d").date()).days
+            nbj = (get_today() - parse_date(x["due"])).days
             p = late_fee(nbj, book["kind"], member["type"], book["price"])
             total = total + p
             print(x["id"] + " | " + member["name"] + " | " + book["title"] + " | " + str(nbj) + " jour(s) | " + "%.2f" % p + " EUR")
@@ -250,7 +255,7 @@ class Library:
         for x in self.l:
             if x["returned"] == "":
                 en_cours = en_cours + 1
-                due = datetime.strptime(x["due"], "%Y-%m-%d").date()
+                due = parse_date(x["due"])
                 if due < get_today():
                     en_retard = en_retard + 1
                     bk = self.find("b", x["book"])
@@ -295,10 +300,10 @@ class Library:
             bk = self.find("b", x["book"])
             mb = self.find("m", x["member"])
             if x["returned"] != "":
-                end = datetime.strptime(x["returned"], "%Y-%m-%d").date()
+                end = parse_date(x["returned"])
             else:
                 end = get_today()
-            dl = max(0, (end - datetime.strptime(x["due"], "%Y-%m-%d").date()).days)
+            dl = max(0, (end - parse_date(x["due"])).days)
             fee = late_fee(dl, bk["kind"], mb["type"], bk["price"])
             f.write(x["id"] + sep + mb["name"] + sep + bk["title"] + sep + x["start"] + sep + x["due"] + sep + x["returned"] + sep + str(dl) + sep + "%.2f" % fee + "\n")
             n = n + 1
@@ -378,7 +383,7 @@ if __name__ == "__main__":
     a = sys.argv[1:]
     if "--today" in a:
         i = a.index("--today")
-        TODAY = datetime.strptime(a[i + 1], "%Y-%m-%d").date()
+        TODAY = parse_date(a[i + 1])
         a = a[:i] + a[i + 2:]
     if "--debug" in a:
         debug = True
