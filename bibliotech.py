@@ -162,9 +162,9 @@ class Library:
     def is_borrowing(self, member_id, book_id):
         for x in self.l:
             if (
-                    x["member"] == member_id
-                    and x["book"] == book_id
-                    and x["returned"] == ""
+                x["member"] == member_id
+                and x["book"] == book_id
+                and x["returned"] == ""
             ):
                 return True
         return False
