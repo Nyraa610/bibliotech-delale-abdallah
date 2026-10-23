@@ -58,3 +58,29 @@ Le TP 2 s'est concentré sur la réduction de la complexité cyclomatique et l'�
 | **Complexité `do_stuff`** | Note **D** (score 23) | Note B (score 8) | Note **A** (score 4) |
 | **Note D globale** | Présente | Présente | **0 note D** |
 | **Suite de tests** | 21 tests (caractérisation) | 21 tests | **38 tests 100% verts** |
+
+
+## 4. TP 3 – Qualité
+
+### Analyse et améliorations
+
+Au début du TP3, Ruff signalait 10 problèmes selon la commande de mesure. J’ai remplacé l’ouverture et la fermeture manuelles du fichier dans `Library.export` par un gestionnaire de contexte `with open(...)`. J’ai également simplifié des expressions conditionnelles. La mesure finale ne signale plus `SIM115` ni les deux `SIM108` présents au départ.
+
+### Comparaison avant/après
+
+| Indicateur | Avant (`v2-fin-j2`) | Après (`qualite`) |
+|---|---:|---:|
+| Diagnostics Ruff | 10 | 7 |
+| Complexité moyenne Radon | A (4,48) | A (4,48) |
+| Fonction la plus complexe | `process` : C (16) | `process` : C (16) |
+| Fonctions notées C ou pire | 2 | 2 |
+| Tests | 38 passés | 38 passés |
+
+La suite de tests est restée entièrement verte. Le nombre de diagnostics Ruff a baissé de 10 à 7. La complexité moyenne et le nombre de fonctions notées C ou pire n’ont pas changé.
+
+### Dette technique restante
+
+La mesure Ruff finale signale encore 7 diagnostics : 3 problèmes de complexité `C901` dans `find`, `report` et `process`, 2 `SIM102` liés à des conditions imbriquées, un `E501` pour une ligne trop longue et un `W292` pour l’absence de saut de ligne à la fin du fichier.
+
+Radon note toujours `process` C (16) et `Library.report` C (14). Ces deux fonctions restent les priorités pour une prochaine amélioration. La complexité moyenne du projet est A (4,48), et `Library.find` est notée B (10) par Radon.
+
