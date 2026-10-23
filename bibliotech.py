@@ -362,55 +362,55 @@ class Library:
             i = i + 1
 
     def export(self, fname, sep):
-        f = open(fname, "w", encoding="utf-8")
-        f.write(
-            "loan_id"
-            + sep
-            + "member"
-            + sep
-            + "title"
-            + sep
-            + "start"
-            + sep
-            + "due"
-            + sep
-            + "returned"
-            + sep
-            + "days_late"
-            + sep
-            + "fee\n"
-        )
         n = 0
-        for x in self.l:
-            bk = self.find("b", x["book"])
-            mb = self.find("m", x["member"])
-            if x["returned"] != "":
-                end = parse_date(x["returned"])
-            else:
-                end = get_today()
-            dl = max(0, (end - parse_date(x["due"])).days)
-            fee = late_fee(dl, bk["kind"], mb["type"], bk["price"])
+        with open(fname, "w", encoding="utf-8") as f:
             f.write(
-                x["id"]
+                "loan_id"
                 + sep
-                + mb["name"]
+                + "member"
                 + sep
-                + bk["title"]
+                + "title"
                 + sep
-                + x["start"]
+                + "start"
                 + sep
-                + x["due"]
+                + "due"
                 + sep
-                + x["returned"]
+                + "returned"
                 + sep
-                + str(dl)
+                + "days_late"
                 + sep
-                + "%.2f" % fee
-                + "\n"
+                + "fee\n"
             )
-            n = n + 1
-        f.close()
+            for x in self.l:
+                bk = self.find("b", x["book"])
+                mb = self.find("m", x["member"])
+                if x["returned"] != "":
+                    end = parse_date(x["returned"])
+                else:
+                    end = get_today()
+                dl = max(0, (end - parse_date(x["due"])).days)
+                fee = late_fee(dl, bk["kind"], mb["type"], bk["price"])
+                f.write(
+                    x["id"]
+                    + sep
+                    + mb["name"]
+                    + sep
+                    + bk["title"]
+                    + sep
+                    + x["start"]
+                    + sep
+                    + x["due"]
+                    + sep
+                    + x["returned"]
+                    + sep
+                    + str(dl)
+                    + sep
+                    + "%.2f" % fee
+                    + "\n"
+                )
+                n = n + 1
         print("Export termine : " + str(n) + " lignes dans " + fname)
+
 
     # systeme de plugins (pour plus tard)
     def register_plugin(self, name, fn, priority=0, options=None):
