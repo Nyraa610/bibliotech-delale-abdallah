@@ -465,10 +465,7 @@ def process(args):
             )
     elif cmd == "members":
         for x in lib.m:
-            if x["active"]:
-                s = "actif"
-            else:
-                s = "inactif"
+            s = "actif" if x["active"] else "inactif"
             print(
                 x["id"]
                 + " | "
