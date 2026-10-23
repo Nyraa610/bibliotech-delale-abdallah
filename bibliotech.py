@@ -384,10 +384,7 @@ class Library:
             for x in self.l:
                 bk = self.find("b", x["book"])
                 mb = self.find("m", x["member"])
-                if x["returned"] != "":
-                    end = parse_date(x["returned"])
-                else:
-                    end = get_today()
+                end = parse_date(x["returned"]) if x["returned"] != "" else get_today()
                 dl = max(0, (end - parse_date(x["due"])).days)
                 fee = late_fee(dl, bk["kind"], mb["type"], bk["price"])
                 f.write(
