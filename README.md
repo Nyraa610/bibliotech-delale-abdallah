@@ -1,73 +1,60 @@
-# BiblioTech
 
-Application en ligne de commande de gestion d'une bibliothèque municipale : catalogue, membres, emprunts, retours, pénalités de retard, rappels et rapports.
 
-L'application **fonctionne**, mais son code a été écrit à la hâte et modifié par de nombreuses personnes. C'est le projet fil rouge du module *Clean Code et Qualité logicielle* : vous allez l'améliorer pendant trois jours **sans changer son comportement**.
+# Bilan du projet - TP 1 & TP 2
+**Binôme : Dorian Delale & Rayan Abdallah**  
+**Module : Clean Code et Qualité logicielle**
 
-## Installation
+##  Démarche globale
+L'objectif de ces deux TP était d'assainir et de restructurer l'application BiblioTech **sans jamais altérer son comportement fonctionnel**, validé en continu par la suite de tests automatisés.
 
-Python 3.10 ou plus récent est nécessaire.
 
-```bash
-python -m venv .venv
-source .venv/bin/activate        # Windows : .venv\Scripts\activate
-pip install -r requirements.txt
-```
 
-## Utilisation
+## TP 1 - Nettoyage, Style & Qualité du code
+Le code initial fonctionnait mais comportait de nombreuses mauvaises pratiques, du code mort et des violations des standards Python.
 
-```bash
-python bibliotech.py list                    # catalogue et disponibilités
-python bibliotech.py members                 # membres et emprunts en cours
-python bibliotech.py borrow M005 B005        # emprunter un document
-python bibliotech.py return L004             # rendre un document
-python bibliotech.py overdue                 # retards et envoi des rappels
-python bibliotech.py report                  # rapport d'activité
-python bibliotech.py export emprunts.csv     # export des emprunts
-```
+### Améliorations clés apportées :
+1. **Passage au linter Ruff (49 erreurs réduites à 0) :**
+    - Correction des imports inutilisés (`json`, `datetime` mal importé).
+    - Suppression du code mort (comme `old_calc_fee`).
+    - Formatage aux standards PEP 8 (longueur de ligne, espacements, f-strings).
+2. **Gestion robuste des ressources :**
+    - Remplacement des `open()` non protégés par des gestionnaires de contexte `with open(...)` pour garantir la fermeture des fichiers.
+3. **Suppression des anti-patterns :**
+    - Élimination des `except: pass` aveugles qui cachaient les bugs. Dans `run_plugins`, les exceptions sont désormais proprement journalisées avec `logging.exception`.
+4. **Élimination des nombres magiques :**
+    - Introduction de constantes explicites en majuscules pour les tarifs journaliers, les durées de prêt et les limites par type d'adhérent.
+5. **Livrable :** Rédaction de `SYNTHESE_TP1.md` et ouverture de la première Pull Request.
 
-L'option `--today AAAA-MM-JJ` permet de simuler une autre date, par exemple :
+---
 
-```bash
-python bibliotech.py overdue --today 2026-10-21
-```
+## TP 2 - Refactoring & Tests unitaires (TDD)
+Le TP 2 s'est concentré sur la réduction de la complexité cyclomatique et l'élimination de la duplication, avec l'écriture de tests unitaires avant chaque refactoring.
 
-Les données se trouvent dans le dossier `data/`. Les commandes `borrow` et `return` modifient `data/loans.csv` : pour revenir aux données d'origine, lancez `git restore data/`.
+### Refactorings réalisés :
+1. **Niveau 1 - Extraction de `late_fee` (Extract Function & DRY) :**
+    - *Défaut :* La logique de pénalité de retard était dupliquée 4 fois (`ret`, `overdue`, `report`, `export`).
+    - *Solution :* Création d'une fonction pure `late_fee(...)` pilotée par des dictionnaires de règles métier (`DAILY_FEE_BY_KIND`, `DISCOUNT_BY_MEMBER_TYPE`).
+    - *Tests :* 9 tests unitaires paramétrés dans `tests/test_rules.py`.
 
-## Règles métier
+2. **Niveau 2 - Découpage de `do_stuff` (Guard Clauses & Single Responsibility) :**
+    - *Défaut :* `do_stuff` comptait 7 niveaux d'imbrication de `if`/`else` et une note critique de complexité Radon (**D, score 23**).
+    - *Solution :* Renommée en `borrow` et découpée en méthodes à responsabilité unique qui retournent immédiatement en cas d'erreur (clauses de garde) :
+        - `refusal_reason(member, book)` : centralise les 5 règles de refus.
+        - `has_overdue_loan(member_id)` : détection d'emprunts non rendus en retard.
+        - `is_borrowing(member_id, book_id)` : vérifie si le livre est déjà emprunté par ce membre.
+        - `create_loan(member, book)` : calcule l'échéance et enregistre l'emprunt.
+    - *Tests :* Fixture isolée dans `tests/conftest.py` et 6 tests unitaires dans `tests/test_borrow.py`.
 
-| Règle | Valeur |
-| --- | --- |
-| Durée d'emprunt | livre 21 jours, DVD 7 jours, magazine 3 jours |
-| Emprunts simultanés maximum | standard 3, étudiant 5, premium 8 |
-| Pénalité par jour de retard | livre 0,50 €, DVD 1,00 €, magazine 0,20 € |
-| Réduction sur les pénalités | étudiant 50 %, premium 100 % |
-| Plafond de la pénalité | prix du document |
+3. **Niveau 3 (Bonus) — Extraction de `parse_date` :**
+    - Remplacement de 8 appels répétitifs à `datetime.strptime(..., "%Y-%m-%d").date()` par une fonction dédiée `parse_date`, testée aux cas valides et invalides.
 
-Un emprunt est refusé si le membre est inactif, s'il a un emprunt en retard, s'il a atteint sa limite, s'il a déjà ce document, ou s'il ne reste aucun exemplaire.
+---
 
-## Tests
+## Métriques & Résultats
 
-```bash
-pytest
-```
-
-Le dossier `tests/` contient des **tests de caractérisation** : ils lancent l'application et comparent sa sortie à des résultats de référence. Ils ne dépendent pas de l'organisation interne du code. Vous pouvez donc renommer, découper et déplacer librement le code de `bibliotech.py` : **tant que les tests restent verts, le comportement est préservé.**
-
-Ne modifiez pas `tests/test_caracterisation.py` ni le dossier `tests/golden/`.
-
-## Analyse statique
-
-```bash
-ruff check .            # signaler les problèmes
-ruff check . --fix      # corriger automatiquement ce qui peut l'être
-ruff format .           # mettre en forme le code
-```
-
-## Règles du jeu
-
-1. Lancez `pytest` avant de commencer : tout doit être vert.
-2. Travaillez par petits pas : une amélioration, puis `pytest`, puis un commit.
-3. Ne committez jamais avec un test rouge.
-4. Un message de commit explicite par amélioration.
-5. Notez chaque correction dans votre fichier de synthèse.
+| Métrique | État initial (v0) | Après TP 1 | Après TP 2 (Final) |
+|---|---|---|---|
+| **Erreurs Ruff** | 49 problèmes | 0 problème (`All checks passed!`) | 0 problème |
+| **Complexité `do_stuff`** | Note **D** (score 23) | Note B (score 8) | Note **A** (score 4) |
+| **Note D globale** | Présente | Présente | **0 note D** |
+| **Suite de tests** | 21 tests (caractérisation) | 21 tests | **38 tests 100% verts** |
